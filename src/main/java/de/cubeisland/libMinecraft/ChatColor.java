@@ -29,7 +29,7 @@ public enum ChatColor
     ITALIC('o', 0x14),
     RESET('r', 0x15);
     
-    public static final char COLOR_CHAR = '§';
+    public static final char COLOR_CHAR = '\u00A7';
     private static final String CHARS = "0123456789AaBbCcDdEeFfKkLlMmNnOoRr";
     private static final Pattern STRIP_COLOR_PATTERN;
     private static final Map<Byte, ChatColor> BY_CODE;

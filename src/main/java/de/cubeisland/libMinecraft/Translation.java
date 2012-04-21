@@ -22,11 +22,11 @@ public class Translation
     {
         if (clazz == null)
         {
-            throw new IllegalArgumentException("plugin must not be null!");
+            throw new IllegalArgumentException("The class must not be null!");
         }
         if (language == null)
         {
-            throw new IllegalArgumentException("language must not be null!");
+            throw new IllegalArgumentException("The language must not be null!");
         }
         
         InputStream is = clazz.getResourceAsStream(RESOURCE_PATH + language + RESOURCE_EXT);
@@ -50,6 +50,10 @@ public class Translation
         char firstChar;
         for (String line : explode("\n", sb.toString().trim()))
         {
+            if (line.length() == 0)
+            {
+                continue;
+            }
             firstChar = line.charAt(0);
             if (firstChar == ';' || firstChar == '[')
             {
