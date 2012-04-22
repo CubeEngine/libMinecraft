@@ -70,7 +70,7 @@ public class Translation
             message = line.substring(equalsOffset + 1).trim();
             if (message.charAt(0) == '"' && message.length() > 2 && message.charAt(message.length() - 1) == '"')
             {
-                message = message.substring(1, message.length() - 2);
+                message = message.substring(1, message.length() - 1);
             }
 
             translations.put(key, ChatColor.translateAlternateColorCodes('&', message));
