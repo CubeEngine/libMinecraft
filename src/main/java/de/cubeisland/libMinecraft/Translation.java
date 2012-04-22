@@ -87,7 +87,6 @@ public class Translation
         {
             return "[" + key + "]";
         }
-        //return MessageFormat.format(translation, params);
         return String.format(translation, params);
     }
 
