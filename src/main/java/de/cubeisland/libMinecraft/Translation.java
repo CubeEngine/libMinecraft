@@ -68,7 +68,7 @@ public class Translation
 
             key = line.substring(0, equalsOffset).trim().toLowerCase();
             message = line.substring(equalsOffset + 1).trim();
-            if (message.charAt(0) == '"' && message.length() > 2 && message.charAt(message.length() - 1) == '"')
+            if (message.length() > 2 && message.charAt(0) == '"' && message.charAt(message.length() - 1) == '"')
             {
                 message = message.substring(1, message.length() - 1);
             }
@@ -87,6 +87,7 @@ public class Translation
         {
             return "[" + key + "]";
         }
+        //return MessageFormat.format(translation, params);
         return String.format(translation, params);
     }
 
@@ -96,12 +97,10 @@ public class Translation
         {
             return new Translation(clazz, language);
         }
-        catch (IOException e)
-        {
-            e.printStackTrace(System.err);
-        }
         catch (Throwable t)
-        {}
+        {
+            t.printStackTrace(System.err);
+        }
         return null;
     }
 
