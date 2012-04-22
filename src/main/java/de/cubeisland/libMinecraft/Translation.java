@@ -2,14 +2,13 @@ package de.cubeisland.libMinecraft;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
+ * Represents a translation loaded from the jar.
  *
- * @author CodeInfection
+ * @author Phillip Schichtel
  */
 public class Translation
 {
@@ -18,7 +17,7 @@ public class Translation
     private static final String RESOURCE_PATH = "/language/";
     private static final String RESOURCE_EXT = ".ini";
 
-    private Translation(Class clazz, final String language) throws IOException
+    public Translation(Class clazz, final String language) throws IOException
     {
         if (clazz == null)
         {
@@ -32,7 +31,7 @@ public class Translation
         InputStream is = clazz.getResourceAsStream(RESOURCE_PATH + language + RESOURCE_EXT);
         if (is == null)
         {
-            throw new IllegalStateException("Requested language was not found!");
+            throw new IllegalStateException("Requested language '" + language + "' was not found!");
         }
         this.translations = new HashMap<String, String>();
         StringBuilder sb = new StringBuilder();
@@ -48,7 +47,9 @@ public class Translation
         translations.clear();
         int equalsOffset;
         char firstChar;
-        for (String line : explode("\n", sb.toString().trim()))
+        String key;
+        String message;
+        for (String line : StringUtils.explode("\n", sb.toString().trim()))
         {
             if (line.length() == 0)
             {
@@ -65,7 +66,14 @@ public class Translation
                 continue;
             }
 
-            translations.put(line.substring(0, equalsOffset).trim(), ChatColor.translateAlternateColorCodes('&', line.substring(equalsOffset + 1).trim()));
+            key = line.substring(0, equalsOffset).trim().toLowerCase();
+            message = line.substring(equalsOffset + 1).trim();
+            if (message.charAt(0) == '"' && message.length() > 2 && message.charAt(message.length() - 1) == '"')
+            {
+                message = message.substring(1, message.length() - 2);
+            }
+
+            translations.put(key, ChatColor.translateAlternateColorCodes('&', message));
         }
 
         this.language = language;
@@ -73,10 +81,11 @@ public class Translation
 
     public String translate(String key, Object... params)
     {
+        key = key.toLowerCase();
         String translation = this.translations.get(key);
         if (translation == null)
         {
-            return "null";
+            return "[" + key + "]";
         }
         return String.format(translation, params);
     }
@@ -91,26 +100,18 @@ public class Translation
         {
             e.printStackTrace(System.err);
         }
+        catch (Throwable t)
+        {}
         return null;
     }
 
+    /**
+     * Returns the name of the language
+     *
+     * @return the language
+     */
     public String getLanguage()
     {
         return this.language;
-    }
-
-    private static List<String> explode(String delim, String string)
-    {
-        int pos, offset = 0, delimLen = delim.length();
-        List<String> tokens = new ArrayList<String>();
-
-        while ((pos = string.indexOf(delim, offset)) > -1)
-        {
-            tokens.add(string.substring(offset, pos));
-            offset = pos + delimLen;
-        }
-        tokens.add(string.substring(offset));
-
-        return tokens;
     }
 }
