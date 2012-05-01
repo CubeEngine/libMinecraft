@@ -1,5 +1,7 @@
-package de.cubeisland.libMinecraft;
+package de.cubeisland.libMinecraft.translation;
 
+import de.cubeisland.libMinecraft.ChatColor;
+import de.cubeisland.libMinecraft.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
