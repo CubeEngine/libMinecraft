@@ -15,7 +15,7 @@ import org.bukkit.permissions.PermissionDefault;
 @Target(ElementType.METHOD)
 public @interface CommandPermission
 {
-    public String value();
+    public String value() default "";
     public PermissionDefault def() default PermissionDefault.OP;
     public boolean addParent() default true;
 }

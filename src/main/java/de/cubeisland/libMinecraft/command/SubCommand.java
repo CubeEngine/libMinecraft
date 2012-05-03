@@ -60,7 +60,7 @@ public class SubCommand
         this.description = description;
     }
 
-    public boolean execute(CommandSender sender, CommandArgs args)
+    public boolean execute(CommandSender sender, CommandArgs args) throws Throwable
     {
         try
         {
@@ -84,7 +84,7 @@ public class SubCommand
             }
             else
             {
-                throw new CommandException("Internal error: " + t.getLocalizedMessage(), t);
+                throw t;
             }
         }
         return true;

@@ -1,5 +1,6 @@
 package de.cubeisland.libMinecraft.command;
 
+import de.cubeisland.libMinecraft.ChatColor;
 import de.cubeisland.libMinecraft.translation.TranslatablePlugin;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -18,10 +19,8 @@ import org.bukkit.plugin.PluginManager;
  *
  * @author Phillip Schichtel
  */
-public final class BaseCommand implements CommandExecutor
+public class BaseCommand implements CommandExecutor
 {
-    private static final Map<Plugin, BaseCommand> instances = new HashMap<Plugin, BaseCommand>();
-    
     private final Plugin plugin;
     private final PluginManager pm;
     private final Map<Object, Set<String>> objectCommandMap;
@@ -29,9 +28,15 @@ public final class BaseCommand implements CommandExecutor
     private final Map<String, String> aliases;
     private String defaultCommand;
 
-    private Permission parentPermission;
+    private final Permission parentPermission;
+    private final String permissionBase;
 
-    private BaseCommand(Plugin plugin)
+    public BaseCommand(Plugin plugin, Permission parentPermission)
+    {
+        this(plugin, parentPermission, null);
+    }
+
+    public BaseCommand(Plugin plugin, Permission parentPermission, String permissionBase)
     {
         this.plugin = plugin;
         this.pm = plugin.getServer().getPluginManager();
@@ -42,18 +47,10 @@ public final class BaseCommand implements CommandExecutor
         this.registerCommands(this);
         this.defaultCommand = "help";
 
-        this.parentPermission = null;
-    }
+        this.parentPermission = parentPermission;
+        this.registerPermission(parentPermission);
 
-    public static BaseCommand getInstance(Plugin plugin)
-    {
-        BaseCommand instance = instances.get(plugin);
-        if (instance == null)
-        {
-            instance = new BaseCommand(plugin);
-            instances.put(plugin, instance);
-        }
-        return instance;
+        this.permissionBase = permissionBase;
     }
 
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String label, String[] args)
@@ -74,7 +71,7 @@ public final class BaseCommand implements CommandExecutor
             Permission permission = subCommand.getPermission();
             if (permission != null && !sender.hasPermission(permission))
             {
-                sender.sendMessage(this.getTranslation("command_permissionDenied", "Permission denied!"));
+                sender.sendMessage(this.getTranslation("command_permdenied", "Permission denied!"));
             }
             else
             {
@@ -85,6 +82,11 @@ public final class BaseCommand implements CommandExecutor
                 catch (CommandException e)
                 {
                     sender.sendMessage(e.getLocalizedMessage());
+                }
+                catch (Throwable t)
+                {
+                    sender.sendMessage(this.getTranslation("command_internalerror", ChatColor.RED + "An internal error occurred!"));
+                    t.printStackTrace(System.err);
                 }
             }
         }
@@ -111,24 +113,6 @@ public final class BaseCommand implements CommandExecutor
         return this.getCommandByName(this.defaultCommand);
     }
 
-    public BaseCommand setParentPermission(Permission parentPermission)
-    {
-        this.parentPermission = parentPermission;
-        this.registerPermission(this.parentPermission);
-
-        Permission perm;
-        for (SubCommand command : this.commands.values())
-        {
-            perm = command.getPermission();
-            if (perm != null && command.addPermissionParent())
-            {
-                perm.addParent(this.parentPermission, true);
-            }
-        }
-
-        return this;
-    }
-
     public Permission getParentPermission()
     {
         return this.parentPermission;
@@ -139,7 +123,7 @@ public final class BaseCommand implements CommandExecutor
         return this.plugin;
     }
 
-    public BaseCommand registerCommands(Object commandContainer)
+    public final BaseCommand registerCommands(Object commandContainer)
     {
         if (commandContainer == null)
         {
@@ -170,12 +154,20 @@ public final class BaseCommand implements CommandExecutor
                     permissionAnnotation = method.getAnnotation(CommandPermission.class);
                     if (permissionAnnotation != null)
                     {
-                        permission = new Permission(permissionAnnotation.value(), permissionAnnotation.def());
-                        addPermissionParent = permissionAnnotation.addParent();
-                        this.registerPermission(permission);
-                        if (this.parentPermission != null && addPermissionParent)
+                        String permissionName = permissionAnnotation.value();
+                        if (permissionName.length() == 0 && this.permissionBase != null)
                         {
-                            permission.addParent(this.parentPermission, true);
+                            permissionName = this.permissionBase + name;
+                        }
+                        if (permissionName.length() > 0)
+                        {
+                            permission = new Permission(permissionName, permissionAnnotation.def());
+                            addPermissionParent = permissionAnnotation.addParent();
+                            this.registerPermission(permission);
+                            if (this.parentPermission != null && addPermissionParent)
+                            {
+                                permission.addParent(this.parentPermission, true);
+                            }
                         }
                     }
                     try
@@ -325,7 +317,7 @@ public final class BaseCommand implements CommandExecutor
         }
     }
 
-    @Command(desc = "This command is for testing")
+    //@Command(desc = "This command is for testing")
     @CommandPermission("libminecraft.test")
     public void test(CommandSender sender, CommandArgs args)
     {
