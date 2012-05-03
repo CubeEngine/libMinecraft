@@ -1,23 +1,24 @@
 package de.cubeisland.libMinecraft.command;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  *
+ *
  * @author Phillip Schichtel
- * @author Faithcaio
  */
 public class Args
 {
     private final BaseCommand baseCommand;
-    private final SubCommand subCommand;
     private final String baseLabel;
+    private final SubCommand subCommand;
     private final String label;
-    private final List<String> flags;
-    private final Map<String, String> params;
+    private final Set<String> flags;
+    private final List<String> params;
     private final boolean empty;
     private final int size;
 
@@ -30,32 +31,103 @@ public class Args
     public Args(BaseCommand baseCommand, String baseLabel, SubCommand subCommand, String[] args)
     {
         this.baseCommand = baseCommand;
-        this.subCommand = subCommand;
         this.baseLabel = baseLabel;
-        this.flags = new ArrayList<String>();
-        this.params = new HashMap<String, String>();
+        this.subCommand = subCommand;
+        this.flags = new HashSet<String>();
+        this.params = new ArrayList<String>();
 
         if (args.length > 0)
         {
             this.label = args[0];
-            String name;
+
+            char firstChar;
+            char quoteChar = '\0';
+            int length;
+            StringBuilder quotedArgBuilder = null;
+            
             for (int i = 1; i < args.length; ++i)
             {
-                if (args[i].charAt(0) == '-')
+                firstChar = args[i].charAt(0);
+                length = args[i].length();
+
+                if (length < 1)
                 {
-                    name = args[i].substring(1);
-                    if (i + 1 < args.length)
+                    if (quotedArgBuilder != null)
                     {
-                        this.params.put(name, args[++i]);
+                        quotedArgBuilder.append(' ');
                     }
-                    else
-                    {
-                        this.flags.add(name);
-                    }
+                    continue;
                 }
-                else
+
+                switch (firstChar)
                 {
-                    this.flags.add(args[i]);
+                    case '\'':
+                    case '"':
+                        if (quotedArgBuilder == null)
+                        {
+                            if (i + 1 >= args.length)
+                            {
+                                this.params.add(args[i].substring(1));
+                            }
+                            else
+                            {
+                                quoteChar = firstChar;
+                                quotedArgBuilder = new StringBuilder(args[i].substring(1));
+                            }
+                            break;
+                        }
+                    case '-':
+                        if (quotedArgBuilder == null && args[i].matches("^\\-[A-Za-z]+$"))
+                        {
+                            this.flags.add(args[i].substring(1));
+                            break;
+                        }
+                    default:
+                        if (quotedArgBuilder == null)
+                        {
+                            this.params.add(args[i]);
+                        }
+                        else
+                        {
+                            if (quotedArgBuilder == null)
+                            {
+                                this.params.add(args[i]);
+                            }
+                            else
+                            {
+                                int quoteOffset = args[i].indexOf(quoteChar);
+                                if (quoteOffset >= 0)
+                                {
+                                    String before = args[i].substring(0, quoteOffset);
+                                    String after = "";
+                                    if (quoteOffset + 1 < length)
+                                    {
+                                        after = args[i].substring(quoteOffset + 1);
+                                    }
+                                    
+                                    if (before.length() > 0)
+                                    {
+                                        quotedArgBuilder.append(' ').append(before);
+                                    }
+                                    this.params.add(quotedArgBuilder.toString());
+                                    quotedArgBuilder = null;
+
+                                    if (after.length() > 0)
+                                    {
+                                        this.params.add(after);
+                                    }
+                                }
+                                else
+                                {
+                                    quotedArgBuilder.append(' ').append(args[i]);
+                                    if (i + 1 >= args.length)
+                                    {
+                                        this.params.add(quotedArgBuilder.toString());
+                                        quotedArgBuilder = null;
+                                    }
+                                }
+                            }
+                        }
                 }
             }
         }
@@ -63,12 +135,12 @@ public class Args
         {
             throw new IllegalArgumentException("There need to be at least 1 argument!");
         }
-        this.empty = (this.flags.isEmpty() && this.params.isEmpty());
-        this.size = this.flags.size() + this.params.size();
+        this.empty = this.params.isEmpty();
+        this.size = this.params.size();
     }
 
     /**
-     * Checks whether there are arguments
+     * Checks whether there are parameters
      *
      * @return true if empty
      */
@@ -78,9 +150,9 @@ public class Args
     }
 
     /**
-     * Returns the number of arguments
+     * Returns the number of parameters
      *
-     * @return the numbers of arguments
+     * @return the numbers of parameters
      */
     public int size()
     {
@@ -157,43 +229,15 @@ public class Args
     }
 
     /**
-     * Checks whether the given parameter exists
-     *
-     * @param param the parameter name
-     * @return true if it exists
-     */
-    public boolean hasParam(String param)
-    {
-        return this.params.containsKey(param);
-    }
-
-    /**
-     * Checks whether all the given params exist
-     *
-     * @param params the params to check
-     * @return true if all params exist
-     */
-    public boolean hasParams(String... params)
-    {
-        for (String param : params)
-        {
-            if (!this.hasParam(param))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Returns the requested value as a String
      *
      * @param i the index of the flag
-     * @return the value as String or null
+     * @return the value as String
+     * @throws IndexOutOfBoundsException if the index is out of range
      */
     public String getString(int i)
     {
-        return this.getString(i, null);
+        return this.params.get(i);
     }
 
     /**
@@ -205,238 +249,44 @@ public class Args
      */
     public String getString(int i, String def)
     {
-        if (i >= 0 && this.flags.size() > i)
+        if (i >= 0 && this.size > i)
         {
-            return this.flags.get(i);
+            return this.params.get(i);
         }
         return def;
     }
 
     /**
-     * Returns the requested value as a String
+     * Returns the requested value as an int
      *
-     * @param param the name of the param
-     * @return the value as String or null
+     * @param index the index
+     * @return the value as int
      */
-    public String getString(String param)
+    public int getInt(int index) throws NumberFormatException
     {
-        return this.getString(param, null);
+        return Integer.parseInt(this.getString(index));
     }
 
     /**
-     * Returns the requested value as a String
+     * Returns the requested value as a double
      *
-     * @param param the name of the param
-     * @param def the default value
-     * @return the value as String or the given default value
+     * @param index the index
+     * @return the value as double
      */
-    public String getString(String param, String def)
+    public double getDouble(int index) throws NumberFormatException
     {
-        if (this.params.containsKey(param))
-        {
-            return this.params.get(param);
-        }
-        return def;
+        return Double.parseDouble(this.getString(index));
     }
 
     /**
-     * Returns the requested value as an Integer
+     * Returns the requested value as a long
      *
-     * @param i the index of the flag
-     * @return the value as Integer or null
+     * @param i the index
+     * @return the value as long
      */
-    public Integer getInt(int flag)
+    public long getLong(int index) throws NumberFormatException
     {
-        return this.getInt(flag, null);
-    }
-
-    /**
-     * Returns the requested value as an Integer or the given default value
-     *
-     * @param i the index of the flag
-     * @param def the default value
-     * @return the value as Integer or the default value
-     */
-    public Integer getInt(int flag, Integer def)
-    {
-        String value = this.getString(flag);
-        if (value != null)
-        {
-            try
-            {
-                return Integer.parseInt(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
-    }
-
-    /**
-     * Returns the requested value as an Integer
-     *
-     * @param param the name of the parameter
-     * @return the value as Integer or null
-     */
-    public Integer getInt(String param)
-    {
-        return this.getInt(param, null);
-    }
-
-    /**
-     * Returns the requested value as an Integer or the given default value
-     *
-     * @param param the name of the parameter
-     * @param def the default value
-     * @return the value as Integer or the default value
-     */
-    public Integer getInt(String param, Integer def)
-    {
-        String value = this.getString(param);
-        if (value != null)
-        {
-            try
-            {
-                return Integer.parseInt(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
-    }
-
-    /**
-     * Returns the requested value as a Double
-     *
-     * @param i the index of the flag
-     * @return the value as Double or null
-     */
-    public Double getDouble(int flag)
-    {
-        return this.getDouble(flag, null);
-    }
-
-    /**
-     * Returns the requested value as a Double or the given default value
-     *
-     * @param i the index of the flag
-     * @param def the default value
-     * @return the value as Double or the default value
-     */
-    public Double getDouble(int flag, Double def)
-    {
-        String value = this.getString(flag);
-        if (value != null)
-        {
-            try
-            {
-                return Double.parseDouble(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
-    }
-
-    /**
-     * Returns the requested value as a Double
-     *
-     * @param param the name of the parameter
-     * @param def the default value
-     * @return the value as Double or null
-     */
-    public Double getDouble(String param)
-    {
-        return this.getDouble(param, null);
-    }
-
-    /**
-     * Returns the requested value as a Double or the given default value
-     *
-     * @param param the name of the parameter
-     * @param def the default value
-     * @return the value as Double or the default value
-     */
-    public Double getDouble(String param, Double def)
-    {
-        String value = this.getString(param);
-        if (value != null)
-        {
-            try
-            {
-                return Double.parseDouble(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
-    }
-
-    /**
-     * Returns the requested value as a Long
-     *
-     * @param i the index of the flag
-     * @return the value as Long or null
-     */
-    public Long getLong(int flag)
-    {
-        return this.getLong(flag, null);
-    }
-
-    /**
-     * Returns the requested value as a Long or the given default value
-     *
-     * @param i the index of the flag
-     * @param def the default value
-     * @return the value as Long or the default value
-     */
-    public Long getLong(int flag, Long def)
-    {
-        String value = this.getString(flag);
-        if (value != null)
-        {
-            try
-            {
-                return Long.parseLong(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
-    }
-
-    /**
-     * Returns the requested value as a Long
-     *
-     * @param param the name of the parameter
-     * @param def the default value
-     * @return the value as Long or null
-     */
-    public Long getLong(String param)
-    {
-        return this.getLong(param, null);
-    }
-
-    /**
-     * Returns the requested value as a Long or the given default value
-     *
-     * @param param the name of the parameter
-     * @param def the default value
-     * @return the value as Long or the default value
-     */
-    public Long getLong(String param, Long def)
-    {
-        String value = this.getString(param);
-        if (value != null)
-        {
-            try
-            {
-                return Long.parseLong(value);
-            }
-            catch (NumberFormatException e)
-            {}
-        }
-        return def;
+        return Long.parseLong(this.getString(index));
     }
 
     /**
@@ -450,31 +300,41 @@ public class Args
      *
      * everything else --> false
      *
-     * @param i the index of the flag
+     * @param i the index
      * @return true or false
      */
-    public boolean getBoolean(int flag)
+    public boolean getBoolean(int index)
     {
-        return parseBoolean(this.getString(flag));
+        return this.getBoolean(index, "true", "yes", "on", "1", "enable");
     }
 
     /**
-     * Returns the requested value as a boolean
+     * Returns the value as true, when it equals (case insensitive) any of the given words.
      *
-     * @param param the name of the parameter
-     * @return true or false
+     * @param index the index
+     * @param trueWords the words that indicate true
+     * @return true if any of the words match
      */
-    public boolean getBoolean(String param)
+    public boolean getBoolean(int index, String... trueWords)
     {
-        return parseBoolean(this.getString(param));
-    }
-
-    private static boolean parseBoolean(String string)
-    {
-        if ("true".equalsIgnoreCase(string) || "yes".equalsIgnoreCase(string) || "on".equalsIgnoreCase(string) || "1".equals(string) || "enable".equalsIgnoreCase(string))
+        String string = this.getString(index);
+        for (String word : trueWords)
         {
-            return true;
+            if (string.equalsIgnoreCase(word))
+            {
+                return true;
+            }
         }
         return false;
+    }
+
+    public Set<String> getFlags()
+    {
+        return Collections.unmodifiableSet(this.flags);
+    }
+
+    public List<String> getParams()
+    {
+        return Collections.unmodifiableList(this.params);
     }
 }

@@ -1,20 +1,21 @@
 package de.cubeisland.libMinecraft.command;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.bukkit.permissions.PermissionDefault;
 
 /**
- * Annotates a method as a command
+ * Annotates the permission of a command
  *
  * @author Phillip Schichtel
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Command
+public @interface CommandPermission
 {
-    public String name() default "";
-    public String[] aliases() default {};
-    public String usage() default "";
-    public String desc();
+    public String value();
+    public PermissionDefault def() default PermissionDefault.OP;
+    public boolean addParent() default true;
 }

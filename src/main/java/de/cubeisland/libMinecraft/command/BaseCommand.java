@@ -66,12 +66,13 @@ public final class BaseCommand implements CommandExecutor
         else
         {
             subCommand = this.getCommandByName(this.defaultCommand);
-            args = new String[] {subCommand.name};
+            args = new String[] {subCommand.getName()};
         }
 
         if (subCommand != null)
         {
-            if (subCommand.permission != null && !sender.hasPermission(subCommand.permission))
+            Permission permission = subCommand.getPermission();
+            if (permission != null && !sender.hasPermission(permission))
             {
                 sender.sendMessage(this.getTranslation("command_permissionDenied", "Permission denied!"));
             }
@@ -100,7 +101,7 @@ public final class BaseCommand implements CommandExecutor
         SubCommand command = this.getCommand(name);
         if (command != null)
         {
-            this.defaultCommand = command.name;
+            this.defaultCommand = command.getName();
         }
         return this;
     }
@@ -115,9 +116,14 @@ public final class BaseCommand implements CommandExecutor
         this.parentPermission = parentPermission;
         this.registerPermission(this.parentPermission);
 
+        Permission perm;
         for (SubCommand command : this.commands.values())
         {
-            command.permission.addParent(this.parentPermission, true);
+            perm = command.getPermission();
+            if (perm != null && command.addPermissionParent())
+            {
+                perm.addParent(this.parentPermission, true);
+            }
         }
 
         return this;
@@ -144,9 +150,10 @@ public final class BaseCommand implements CommandExecutor
         {
             Set<String> registeredCommands = new HashSet<String>();
             Command annotation;
+            CommandPermission permissionAnnotation;
             String name;
-            String permissionName;
-            Permission permission = null;
+            Permission permission;
+            
             for (Method method : commandContainer.getClass().getMethods())
             {
                 annotation = method.getAnnotation(Command.class);
@@ -158,19 +165,22 @@ public final class BaseCommand implements CommandExecutor
                         name = method.getName();
                     }
                     name = name.toLowerCase();
-                    permissionName = annotation.permission();
-                    if (!"".equals(permissionName))
+                    permission = null;
+                    boolean addPermissionParent = false;
+                    permissionAnnotation = method.getAnnotation(CommandPermission.class);
+                    if (permissionAnnotation != null)
                     {
-                        permission = new Permission(name, annotation.permissionDefault());
+                        permission = new Permission(permissionAnnotation.value(), permissionAnnotation.def());
+                        addPermissionParent = permissionAnnotation.addParent();
                         this.registerPermission(permission);
-                        if (this.parentPermission != null)
+                        if (this.parentPermission != null && addPermissionParent)
                         {
                             permission.addParent(this.parentPermission, true);
                         }
                     }
                     try
                     {
-                        this.commands.put(name, new SubCommand(commandContainer, method, name, annotation.aliases(), permission, annotation.usage(), annotation.desc()));
+                        this.commands.put(name, new SubCommand(commandContainer, method, name, annotation.aliases(), permission, addPermissionParent, annotation.usage(), annotation.desc()));
                         registeredCommands.add(name);
 
                         for (String alias : annotation.aliases())
@@ -231,7 +241,7 @@ public final class BaseCommand implements CommandExecutor
         {
             throw new IllegalArgumentException("the command must not be null!");
         }
-        this.unregisterCommand(command.name);
+        this.unregisterCommand(command.getName());
         return this;
     }
 
@@ -309,9 +319,28 @@ public final class BaseCommand implements CommandExecutor
 
         for (SubCommand command : args.getBaseCommand().getAllSubCommands())
         {
-            sender.sendMessage("/" + args.getBaseLabel() + " " + command.name + " " + command.usage);
-            sender.sendMessage("    " + this.getTranslation(command.name + "_description", command.description));
+            sender.sendMessage("/" + args.getBaseLabel() + " " + command.getName() + " " + command.getUsage());
+            sender.sendMessage("    " + this.getTranslation(command.getName() + "_description", command.getDescription()));
             sender.sendMessage(" ");
+        }
+    }
+
+    @Command(desc = "This command is for testing")
+    @CommandPermission("libminecraft.test")
+    public void test(CommandSender sender, Args args)
+    {
+        sender.sendMessage("Params:");
+
+        for (String param : args.getParams())
+        {
+            sender.sendMessage(" - '" + param + "'");
+        }
+        sender.sendMessage(" ");
+
+        sender.sendMessage("Flags:");
+        for (String flag : args.getFlags())
+        {
+            sender.sendMessage(" - '" + flag + "'");
         }
     }
 }

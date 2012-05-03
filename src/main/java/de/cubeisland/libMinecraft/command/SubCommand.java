@@ -16,13 +16,14 @@ public class SubCommand
     private final Object commandContainer;
     private final Method method;
 
-    public final String name;
-    public final String[] aliases;
-    public final Permission permission;
-    public final String usage;
-    public final String description;
+    private final String name;
+    private final String[] aliases;
+    private final Permission permission;
+    private final boolean addPermissionParent;
+    private final String usage;
+    private final String description;
 
-    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permission, String usage, String description)
+    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permissions, boolean addPermissionParent, String usage, String description)
     {
         if (commandContainer == null)
         {
@@ -53,7 +54,8 @@ public class SubCommand
 
         this.name = name;
         this.aliases = aliases;
-        this.permission = permission;
+        this.permission = permissions;
+        this.addPermissionParent = addPermissionParent;
         this.usage = usage;
         this.description = description;
     }
@@ -86,5 +88,35 @@ public class SubCommand
             }
         }
         return true;
+    }
+
+    public String getName()
+    {
+        return this.name;
+    }
+
+    public String[] getAliases()
+    {
+        return this.aliases;
+    }
+
+    public Permission getPermission()
+    {
+        return this.permission;
+    }
+
+    public boolean addPermissionParent()
+    {
+        return this.addPermissionParent;
+    }
+
+    public String getUsage()
+    {
+        return this.usage;
+    }
+
+    public String getDescription()
+    {
+        return this.description;
     }
 }
