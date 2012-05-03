@@ -80,7 +80,7 @@ public final class BaseCommand implements CommandExecutor
             {
                 try
                 {
-                    return subCommand.execute(sender, new Args(this, label, subCommand, args));
+                    return subCommand.execute(sender, new CommandArgs(this, label, subCommand, args));
                 }
                 catch (CommandException e)
                 {
@@ -312,7 +312,7 @@ public final class BaseCommand implements CommandExecutor
     }
 
     @Command(name = "help", desc = "Prints the help page")
-    public void helpCommand(CommandSender sender, Args args)
+    public void helpCommand(CommandSender sender, CommandArgs args)
     {
         sender.sendMessage(this.getTranslation("help_listOfCommands", "Here is a list of the available commands and their usage:"));
         sender.sendMessage(" ");
@@ -327,7 +327,7 @@ public final class BaseCommand implements CommandExecutor
 
     @Command(desc = "This command is for testing")
     @CommandPermission("libminecraft.test")
-    public void test(CommandSender sender, Args args)
+    public void test(CommandSender sender, CommandArgs args)
     {
         sender.sendMessage("Params:");
 

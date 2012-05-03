@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * This class holds all the arguments that got passed to the command
  *
  * @author Phillip Schichtel
  */
-public class Args
+public class CommandArgs
 {
     private final BaseCommand baseCommand;
     private final String baseLabel;
@@ -23,12 +23,12 @@ public class Args
     private final int size;
 
     /**
-     * Initializes the Args object with an array of arguments
+     * Initializes the CommandArgs object with an array of arguments
      *
      * @param args the arguments
      * @throws IllegalArgumentException if the args array is empty
      */
-    public Args(BaseCommand baseCommand, String baseLabel, SubCommand subCommand, String[] args)
+    public CommandArgs(BaseCommand baseCommand, String baseLabel, SubCommand subCommand, String[] args)
     {
         this.baseCommand = baseCommand;
         this.baseLabel = baseLabel;
