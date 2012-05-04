@@ -3,9 +3,12 @@ package de.cubeisland.libMinecraft.command;
 import de.cubeisland.libMinecraft.ChatColor;
 import de.cubeisland.libMinecraft.translation.TranslatablePlugin;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.bukkit.command.CommandExecutor;
@@ -85,7 +88,7 @@ public class BaseCommand implements CommandExecutor
                 }
                 catch (Throwable t)
                 {
-                    sender.sendMessage(this.getTranslation("command_internalerror", ChatColor.RED + "An internal error occurred!"));
+                    sender.sendMessage(this.getTranslation("command_internalerror", "&4An internal error occurred!"));
                     t.printStackTrace(System.err);
                 }
             }
@@ -291,30 +294,61 @@ public class BaseCommand implements CommandExecutor
         }
     }
 
-    private String getTranslation(String key, String alternative)
+    private String getTranslation(String key, String alternative, Object... params)
     {
         if (this.plugin instanceof TranslatablePlugin)
         {
-            return ((TranslatablePlugin)this.plugin).getTranslation().translate(key);
+            return ((TranslatablePlugin)this.plugin).getTranslation().translate(key, params);
         }
         else
         {
-            return alternative;
+            return String.format(ChatColor.translateAlternateColorCodes('&', alternative), params);
         }
     }
 
-    @Command(name = "help", desc = "Prints the help page")
+    @Command(name = "help", desc = "Prints the help page", usage = "[command]")
     public void helpCommand(CommandSender sender, CommandArgs args)
     {
-        sender.sendMessage(this.getTranslation("help_listOfCommands", "Here is a list of the available commands and their usage:"));
-        sender.sendMessage(" ");
-
-        for (SubCommand command : args.getBaseCommand().getAllSubCommands())
+        if (args.size() > 0)
         {
-            sender.sendMessage("/" + args.getBaseLabel() + " " + command.getName() + " " + command.getUsage());
-            sender.sendMessage("    " + this.getTranslation(command.getName() + "_description", command.getDescription()));
-            sender.sendMessage(" ");
+            String commandName = args.getString(0);
+            SubCommand command = getCommand(commandName);
+            if (command != null)
+            {
+                sender.sendMessage("/" + args.getBaseLabel() + " " + args.getString(0) + " " + command.getUsage());
+                sender.sendMessage("    " + this.getTranslation(command.getName() + "_description", command.getDescription()));
+            }
+            else
+            {
+                sender.sendMessage(this.getTranslation("help_cmdnotfound", "&cThe command %s was not found!", args.getString(0)));
+            }
         }
+        else
+        {
+            sender.sendMessage(this.getTranslation("help_listofcommands", "Here is a list of the available commands and their usage:"));
+            sender.sendMessage(" ");
+
+            List<SubCommand> subCommands = new ArrayList<SubCommand>(args.getBaseCommand().getAllSubCommands());
+            Collections.sort(subCommands, SubCommand.COMPARATOR);
+
+            for (SubCommand command : subCommands)
+            {
+                if (command.getPermission() != null && !sender.hasPermission(command.getPermission()))
+                {
+                    continue;
+                }
+                sender.sendMessage("/" + args.getBaseLabel() + " " + command.getName() + " " + command.getUsage());
+                sender.sendMessage("    " + this.getTranslation(command.getName() + "_description", command.getDescription()));
+                sender.sendMessage(" ");
+            }
+        }
+    }
+
+    @Command(name = "version", desc = "Prints the plugin's version")
+    public void versionCommand(CommandSender sender, CommandArgs args)
+    {
+        sender.sendMessage(this.getTranslation("version_pluginversion", "The plugin version: %s", this.plugin.getDescription().getVersion()));
+        sender.sendMessage(" ");
     }
 
     //@Command(desc = "This command is for testing")

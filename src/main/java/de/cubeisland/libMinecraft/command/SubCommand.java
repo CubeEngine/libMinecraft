@@ -2,6 +2,7 @@ package de.cubeisland.libMinecraft.command;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
 
@@ -13,6 +14,7 @@ import org.bukkit.permissions.Permission;
  */
 public class SubCommand
 {
+    public static final Comparator COMPARATOR = new SubCommandComparator();
     private final Object commandContainer;
     private final Method method;
 
@@ -23,7 +25,7 @@ public class SubCommand
     private final String usage;
     private final String description;
 
-    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permissions, boolean addPermissionParent, String usage, String description)
+    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permission, boolean addPermissionParent, String usage, String description)
     {
         if (commandContainer == null)
         {
@@ -54,7 +56,7 @@ public class SubCommand
 
         this.name = name;
         this.aliases = aliases;
-        this.permission = permissions;
+        this.permission = permission;
         this.addPermissionParent = addPermissionParent;
         this.usage = usage;
         this.description = description;
@@ -118,5 +120,19 @@ public class SubCommand
     public String getDescription()
     {
         return this.description;
+    }
+
+    private static final class SubCommandComparator implements Comparator<SubCommand>
+    {
+        public int compare(SubCommand o1, SubCommand o2)
+        {
+            return o1.getName().compareToIgnoreCase(o2.getName());
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "SubCommand(name=" + this.name + ",aliases=" + this.aliases + ")";
     }
 }
