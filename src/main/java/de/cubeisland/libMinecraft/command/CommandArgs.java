@@ -25,6 +25,9 @@ public class CommandArgs
     /**
      * Initializes the CommandArgs object with an array of arguments
      *
+     * @param baseCommand the base command
+     * @param baseLabel  the base label
+     * @param subCommand the sub command
      * @param args the arguments
      * @throws IllegalArgumentException if the args array is empty
      */
