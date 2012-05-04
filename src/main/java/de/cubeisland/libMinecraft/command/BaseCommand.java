@@ -80,7 +80,12 @@ public class BaseCommand implements CommandExecutor
             {
                 try
                 {
-                    return subCommand.execute(sender, new CommandArgs(this, label, subCommand, args));
+                    CommandArgs commandArgs = new CommandArgs(this, label, subCommand, args);
+                    if (!subCommand.execute(sender, commandArgs))
+                    {
+                        sender.sendMessage("/" + label + " " + commandArgs.getLabel() + " " + subCommand.getUsage());
+                    }
+                    return true;
                 }
                 catch (CommandException e)
                 {
