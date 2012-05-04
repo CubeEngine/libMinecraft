@@ -29,6 +29,16 @@ public class LongBitMask
         return this.mask |= bits;
     }
 
+    public long reset()
+    {
+        return this.reset(0);
+    }
+
+    public long reset(long mask)
+    {
+        return this.mask = mask;
+    }
+
     public long unset(long bits)
     {
         return this.mask &= ~bits;

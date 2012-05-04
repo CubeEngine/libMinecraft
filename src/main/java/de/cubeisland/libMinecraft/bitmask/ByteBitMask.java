@@ -29,6 +29,16 @@ public class ByteBitMask
         return this.mask |= bits;
     }
 
+    public byte reset()
+    {
+        return this.reset((byte)0);
+    }
+
+    public byte reset(byte mask)
+    {
+        return this.mask = mask;
+    }
+
     public byte unset(byte bits)
     {
         return this.mask &= ~bits;

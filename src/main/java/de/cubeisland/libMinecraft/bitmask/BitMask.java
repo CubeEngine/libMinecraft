@@ -29,6 +29,16 @@ public class BitMask
         return this.mask |= bits;
     }
 
+    public int reset()
+    {
+        return this.reset(0);
+    }
+
+    public int reset(int mask)
+    {
+        return this.mask = mask;
+    }
+
     public int unset(int bits)
     {
         return this.mask &= ~bits;
