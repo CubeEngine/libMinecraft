@@ -117,6 +117,32 @@ public class Vector2
     }
 
     @Override
+    public boolean equals(Object o)
+    {
+        if (o == null)
+        {
+            return false;
+        }
+        if (!(o instanceof Vector2))
+        {
+            return false;
+        }
+
+        Vector2 other = (Vector2)o;
+
+        return (this.x == other.x && this.y == other.y);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 53 * hash + (int) (Double.doubleToLongBits(this.x) ^ (Double.doubleToLongBits(this.x) >>> 32));
+        hash = 53 * hash + (int) (Double.doubleToLongBits(this.y) ^ (Double.doubleToLongBits(this.y) >>> 32));
+        return hash;
+    }
+
+    @Override
     public String toString()
     {
         return "(" + this.x + "|" + this.y + ")";

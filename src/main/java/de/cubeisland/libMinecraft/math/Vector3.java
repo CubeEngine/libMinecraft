@@ -133,6 +133,33 @@ public class Vector3
     }
 
     @Override
+    public boolean equals(Object o)
+    {
+        if (o == null)
+        {
+            return false;
+        }
+        if (!(o instanceof Vector3))
+        {
+            return false;
+        }
+
+        Vector3 other = (Vector3)o;
+
+        return (this.x == other.x && this.y == other.y && this.z == other.z);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 59 * hash + (int) (Double.doubleToLongBits(this.x) ^ (Double.doubleToLongBits(this.x) >>> 32));
+        hash = 59 * hash + (int) (Double.doubleToLongBits(this.y) ^ (Double.doubleToLongBits(this.y) >>> 32));
+        hash = 59 * hash + (int) (Double.doubleToLongBits(this.z) ^ (Double.doubleToLongBits(this.z) >>> 32));
+        return hash;
+    }
+
+    @Override
     public String toString()
     {
         return "(" + this.x + "|" + this.y  + "|" + this.z + ")";
