@@ -23,9 +23,8 @@ public class SubCommand
     private final Permission permission;
     private final boolean addPermissionParent;
     private final String usage;
-    private final String description;
 
-    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permission, boolean addPermissionParent, String usage, String description)
+    protected SubCommand(Object commandContainer, Method method, String name, String[] aliases, Permission permission, boolean addPermissionParent, String usage)
     {
         if (commandContainer == null)
         {
@@ -59,7 +58,6 @@ public class SubCommand
         this.permission = permission;
         this.addPermissionParent = addPermissionParent;
         this.usage = usage;
-        this.description = description;
     }
 
     public boolean execute(CommandSender sender, CommandArgs args) throws Throwable
@@ -115,11 +113,6 @@ public class SubCommand
     public String getUsage()
     {
         return this.usage;
-    }
-
-    public String getDescription()
-    {
-        return this.description;
     }
 
     private static final class SubCommandComparator implements Comparator<SubCommand>

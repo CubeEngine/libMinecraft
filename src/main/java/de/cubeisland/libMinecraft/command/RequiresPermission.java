@@ -13,7 +13,7 @@ import org.bukkit.permissions.PermissionDefault;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface CommandPermission
+public @interface RequiresPermission
 {
     public String value() default "";
     public PermissionDefault def() default PermissionDefault.OP;
