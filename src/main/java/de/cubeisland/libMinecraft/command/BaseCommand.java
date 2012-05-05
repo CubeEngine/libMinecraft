@@ -14,6 +14,7 @@ import java.util.Set;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
@@ -34,13 +35,25 @@ public class BaseCommand implements CommandExecutor
     private final Permission parentPermission;
     private final String permissionBase;
 
-    public BaseCommand(TranslatablePlugin plugin, Permission parentPermission)
+    public BaseCommand(TranslatablePlugin plugin, String permissionBase)
     {
-        this(plugin, parentPermission, null);
+        this(plugin, permissionBase, PermissionDefault.OP);
     }
 
-    public BaseCommand(TranslatablePlugin plugin, Permission parentPermission, String permissionBase)
+    public BaseCommand(TranslatablePlugin plugin, String permissionBase, PermissionDefault parentDefault)
     {
+        if (plugin == null)
+        {
+            throw new IllegalArgumentException("The plugin must not be null!");
+        }
+        if (permissionBase == null)
+        {
+            throw new IllegalArgumentException("The permission base must not be null!");
+        }
+        if (parentDefault == null)
+        {
+            throw new IllegalArgumentException("The parent permission default must not be null!");
+        }
         this.plugin = plugin;
         this.pm = plugin.getServer().getPluginManager();
         this.objectCommandMap = new HashMap<Object, Set<String>>();
@@ -50,10 +63,10 @@ public class BaseCommand implements CommandExecutor
         this.registerCommands(this);
         this.defaultCommand = "help";
 
-        this.parentPermission = parentPermission;
-        this.registerPermission(parentPermission);
 
         this.permissionBase = permissionBase;
+        this.parentPermission = new Permission(permissionBase + "*", parentDefault);
+        this.registerPermission(parentPermission);
     }
 
     private String _(String key, Object... params)
@@ -168,19 +181,17 @@ public class BaseCommand implements CommandExecutor
                     if (permissionAnnotation != null)
                     {
                         String permissionName = permissionAnnotation.value();
-                        if (permissionName.length() == 0 && this.permissionBase != null)
+                        if (permissionName.length() == 0)
                         {
                             permissionName = this.permissionBase + name;
                         }
-                        if (permissionName.length() > 0)
+
+                        permission = new Permission(permissionName, permissionAnnotation.def());
+                        addPermissionParent = permissionAnnotation.addParent();
+                        this.registerPermission(permission);
+                        if (addPermissionParent)
                         {
-                            permission = new Permission(permissionName, permissionAnnotation.def());
-                            addPermissionParent = permissionAnnotation.addParent();
-                            this.registerPermission(permission);
-                            if (this.parentPermission != null && addPermissionParent)
-                            {
-                                permission.addParent(this.parentPermission, true);
-                            }
+                            permission.addParent(this.parentPermission, true);
                         }
                     }
                     try
