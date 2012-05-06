@@ -2,10 +2,9 @@ package de.cubeisland.libMinecraft.translation;
 
 import de.cubeisland.libMinecraft.ChatColor;
 import de.cubeisland.libMinecraft.StringUtils;
+import gnu.trove.map.hash.THashMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a translation loaded from the jar.
@@ -15,7 +14,7 @@ import java.util.Map;
 public class Translation
 {
     private String language;
-    private final Map<String, String> translations;
+    private final THashMap<String, String> translations;
     private static final String RESOURCE_PATH = "/language/";
     private static final String RESOURCE_EXT = ".ini";
 
@@ -35,7 +34,7 @@ public class Translation
         {
             throw new IllegalStateException("Requested language '" + language + "' was not found!");
         }
-        this.translations = new HashMap<String, String>();
+        this.translations = new THashMap<String, String>();
         StringBuilder sb = new StringBuilder();
         byte[] buffer = new byte[512];
         int bytesRead;
@@ -51,6 +50,7 @@ public class Translation
         char firstChar;
         String key;
         String message;
+        boolean parseColors;
         for (String line : StringUtils.explode("\n", sb.toString().trim()))
         {
             if (line.length() == 0)
@@ -58,6 +58,7 @@ public class Translation
                 continue;
             }
             firstChar = line.charAt(0);
+            parseColors = true;
             if (firstChar == ';' || firstChar == '[')
             {
                 continue;
@@ -70,12 +71,21 @@ public class Translation
 
             key = line.substring(0, equalsOffset).trim().toLowerCase();
             message = line.substring(equalsOffset + 1).trim();
+            if (message.length() > 0 && message.charAt(0) == '@')
+            {
+                message = message.substring(1).trim();
+                parseColors = false;
+            }
             if (message.length() > 2 && message.charAt(0) == '"' && message.charAt(message.length() - 1) == '"')
             {
                 message = message.substring(1, message.length() - 1);
             }
 
-            translations.put(key, ChatColor.translateAlternateColorCodes('&', message));
+            if (parseColors)
+            {
+                message = ChatColor.translateAlternateColorCodes('&', message);
+            }
+            translations.put(key, message);
         }
 
         this.language = language;
@@ -89,7 +99,10 @@ public class Translation
         {
             return "[" + key + "]";
         }
-        return String.format(translation, params);
+        else
+        {
+            return String.format(translation, params);
+        }
     }
 
     public static Translation get(final Class clazz, final String language)
