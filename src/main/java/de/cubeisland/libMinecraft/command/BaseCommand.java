@@ -60,13 +60,14 @@ public class BaseCommand implements CommandExecutor
         this.commands = new HashMap<String, SubCommand>();
         this.aliases = new HashMap<String, String>();
 
+        this.permissionBase = permissionBase;
+        this.parentPermission = new Permission(permissionBase + "*", parentDefault);
+        this.registerPermission(parentPermission);
+        
         this.registerCommands(this);
         this.defaultCommand = "help";
 
 
-        this.permissionBase = permissionBase;
-        this.parentPermission = new Permission(permissionBase + "*", parentDefault);
-        this.registerPermission(parentPermission);
     }
 
     private String _(String key, Object... params)
@@ -164,7 +165,7 @@ public class BaseCommand implements CommandExecutor
             String name;
             Permission permission;
             
-            for (Method method : commandContainer.getClass().getMethods())
+            for (Method method : commandContainer.getClass().getDeclaredMethods())
             {
                 annotation = method.getAnnotation(Command.class);
                 if (annotation != null)
@@ -354,7 +355,7 @@ public class BaseCommand implements CommandExecutor
     }
 
     @Command(name = "version")
-    public void versionCommand(CommandSender sender, CommandArgs args)
+    private void versionCommand(CommandSender sender, CommandArgs args)
     {
         sender.sendMessage(_("version_pluginversion", this.plugin.getDescription().getVersion()));
         sender.sendMessage(" ");
@@ -362,7 +363,7 @@ public class BaseCommand implements CommandExecutor
 
     @Command(name = "reload")
     @RequiresPermission
-    public void reloadCommand(CommandSender sender, CommandArgs args)
+    private void reloadCommand(CommandSender sender, CommandArgs args)
     {
         this.pm.disablePlugin(this.plugin);
         this.pm.enablePlugin(this.plugin);
@@ -371,7 +372,7 @@ public class BaseCommand implements CommandExecutor
 
     @Command(name = "language", usage = "[language]")
     @RequiresPermission
-    public void languageCommand(CommandSender sender, CommandArgs args)
+    private void languageCommand(CommandSender sender, CommandArgs args)
     {
         if (args.size() > 0)
         {
@@ -397,7 +398,7 @@ public class BaseCommand implements CommandExecutor
 
     //@Command
     @RequiresPermission("libminecraft.test")
-    public void test(CommandSender sender, CommandArgs args)
+    private void test(CommandSender sender, CommandArgs args)
     {
         sender.sendMessage("Params:");
 
