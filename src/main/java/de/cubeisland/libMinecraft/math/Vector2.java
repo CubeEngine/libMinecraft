@@ -41,9 +41,19 @@ public class Vector2
         return new Vector2(this.x + other.x, this.y + other.y);
     }
 
+    public Vector2 add(double n)
+    {
+        return new Vector2(this.x + n, this.y + n);
+    }
+
     public Vector2 substract(Vector2 other)
     {
         return new Vector2(this.x - other.x, this.y - other.y);
+    }
+
+    public Vector2 substract(double n)
+    {
+        return new Vector2(this.x - n, this.y - n);
     }
 
     public Vector2 multiply(int n)

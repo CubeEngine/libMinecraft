@@ -52,9 +52,19 @@ public class Vector3
         return new Vector3(this.x + other.x, this.y + other.y, this.z + other.z);
     }
 
+    public Vector3 add(double n)
+    {
+        return new Vector3(this.x + n, this.y + n, this.z + n);
+    }
+
     public Vector3 substract(Vector3 other)
     {
         return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    public Vector3 substract(double n)
+    {
+        return new Vector3(this.x - n, this.y - n, this.z - n);
     }
 
     public Vector3 multiply(int n)
