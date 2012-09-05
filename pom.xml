@@ -24,13 +24,13 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.2.5-R1.0</version>
+            <version>1.3.1-R2.0</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>net.sf.trove4j</groupId>
             <artifactId>trove4j</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
             <type>jar</type>
         </dependency>
     </dependencies>
