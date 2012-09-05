@@ -1,4 +1,2 @@
 language: java
 install: "mvn clean install"
-before_script:
-- "find $HOME/.mvn/"
