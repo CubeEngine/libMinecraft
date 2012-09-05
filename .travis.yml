@@ -1,4 +1,4 @@
 language: java
-install: "maven clean install"
+install: "mvn clean install"
 before_script:
 - "find $HOME/.mvn/"
