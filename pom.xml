@@ -47,6 +47,10 @@
             <id>cubeisland-repo</id>
             <url>http://repo.cubeisland.de/</url>
         </repository>
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+        </repository>
     </repositories>
 
     <build>
